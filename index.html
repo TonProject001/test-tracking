@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GPS Location Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .location-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        #status {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GPS Location Tracker</h1>
+        <div id="status">กำลังรอการอนุญาตการเข้าถึงตำแหน่ง...</div>
+        <button onclick="startTracking()">เริ่มการติดตาม</button>
+        <div class="location-info">
+            <p>ละติจูด: <span id="latitude">-</span></p>
+            <p>ลองจิจูด: <span id="longitude">-</span></p>
+            <p>ความแม่นยำ: <span id="accuracy">-</span> เมตร</p>
+            <p>ความเร็ว: <span id="speed">-</span> km/h</p>
+            <p>อัพเดทล่าสุด: <span id="timestamp">-</span></p>
+        </div>
+    </div>
+
+    <script>
+        let watchId = null;
+
+        function startTracking() {
+            if (navigator.geolocation) {
+                const status = document.getElementById('status');
+                status.textContent = 'กำลังเริ่มการติดตามตำแหน่ง...';
+                status.className = '';
+
+                watchId = navigator.geolocation.watchPosition(
+                    updateLocation,
+                    handleError,
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 0,
+                        timeout: 5000
+                    }
+                );
+            } else {
+                showError('เบราว์เซอร์ของคุณไม่รองรับการติดตามตำแหน่ง GPS');
+            }
+        }
+
+        function updateLocation(position) {
+            const status = document.getElementById('status');
+            status.textContent = 'กำลังติดตามตำแหน่ง';
+            status.className = 'success';
+
+            document.getElementById('latitude').textContent = position.coords.latitude.toFixed(6);
+            document.getElementById('longitude').textContent = position.coords.longitude.toFixed(6);
+            document.getElementById('accuracy').textContent = position.coords.accuracy.toFixed(1);
+            
+            const speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(1) : '-';
+            document.getElementById('speed').textContent = speed;
+
+            const timestamp = new Date(position.timestamp).toLocaleTimeString();
+            document.getElementById('timestamp').textContent = timestamp;
+        }
+
+        function handleError(error) {
+            let message = 'เกิดข้อผิดพลาด: ';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message += 'ผู้ใช้ปฏิเสธการเข้าถึงตำแหน่ง';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message += 'ไม่สามารถระบุตำแหน่งได้';
+                    break;
+                case error.TIMEOUT:
+                    message += 'หมดเวลาในการรับตำแหน่ง';
+                    break;
+                default:
+                    message += 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+            }
+            showError(message);
+        }
+
+        function showError(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'error';
+        }
+    </script>
+</body>
+</html>
